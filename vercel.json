@@ -4,7 +4,6 @@
         {
             "src":"./index.py",
             "use": "@vercel/python",
-            "start": "python3 index.py"
         }
     ],
     "routes": [
