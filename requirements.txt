@@ -1,3 +1,5 @@
-Flask
+uvicorn==0.12.3
+fastapi==0.71.0
 cryptography==41.0.0
 pytz
+pydantic==1.9.0
