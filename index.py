@@ -141,57 +141,28 @@ def adyen_enc(cc, mes, ano, cvv, ADYEN_KEY, adyen_version):
     return card, month, year,cvv
 # print(adyen_enc('4403932515225299','05','2025','021','10001|8C37AA911BD0D55F3DFE074079E9DF328CE8CAB704370AA6985CE8C1CD67309C5365A0FE49B03546DC64B50AE171369635B70EE86C7DD162A984E0633553608E4511086ADB41318E7D9967EC5FE3AAE245530A6C88178B3629C7412F2D0FADDAE4663497DE6D0C765355F6CD0F3E2582495285DF97B1CF0A58816267C55E47588FF228818F84B668647CB5A1E953319C204C98B0EE83BC384544B10ACB0BD1352B2C3E3CDBAB6EE55AAE0358AAF24A403CEB41BE31D923D3CF721F8B3E380E31CEED00678555169F0B1E9B4EF95CC6A9E1C101D554E0D4ADB06B855F28DD523DD16110AB708D2FD4ED120EEEF23D17B55E93EDAA1A595BB54882AB3A9C2ED43D','_0_1_25'))
 
-from fastapi import FastAPI
-from fastapi import FastAPI, HTTPException
-from fastapi import FastAPI, Request
-from fastapi.responses  import RedirectResponse
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-import json
+from flask import Flask, request, jsonify
 
 
-class UnicornException(Exception):
-    def __init__(self, name: str,  message: str):
-        self.name = name
-        self.message = message
+app = Flask(__name__)
 
+@app.route('/adyen', methods=['POST'])
+def encrypt_card_data():
+    cc = request.json['cc']
+    mes = request.json['mes']
+    ano = request.json['ano']
+    cvv = request.json['cvv']
+    ADYEN_KEY = request.json['ADYEN_KEY']
+    adyen_version = request.json['adyen_version']
 
-app = FastAPI(debug=True, 
-              title="Bin lookup And Adyen Generator By .", 
-              redoc_url=None,
-              description=" Feel free to use. made by for subscribers.")
+    card, month, year, cvv = adyen_enc(cc, mes, ano, cvv, ADYEN_KEY, adyen_version)
 
-@app.exception_handler(UnicornException)
-async def unicorn_exception_handler(request: Request, exc: UnicornException):
-    return JSONResponse(
-        status_code=418,
-        content={'success': False, "message": exc.message},
-    )
-
-
-
-
-class Item(BaseModel):
-    card: str
-    month: str
-    year: str
-    cvv: str
-    adyen_version: str
-    adyen_key: str
-
-@app.get("/")
-async def start():
-    return RedirectResponse("http://www.github.com/r0ld3x/adyen-enc-and-bin-info")
-
-
-@app.post("/adyen/")
-async def adyen(item: Item):
-    cc, mes, ano, cvv = adyen_enc(
-        item.card, item.month, item.year, item.cvv, item.adyen_key, item.adyen_version)
-    return {
-        'card': cc,
-        'month': mes,
-        'year': ano,
+    return jsonify({
+        'card': card,
+        'month': month,
+        'year': year,
         'cvv': cvv
-    }
-    
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True)
